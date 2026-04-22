@@ -1,0 +1,249 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+VERSION="0.1.0"
+API_BASE="https://api.open-meteo.com/v1"
+GEOCODE_BASE="https://geocoding-api.open-meteo.com/v1"
+
+# Weather code descriptions
+weather_desc() {
+  case "$1" in
+    0) echo "Clear sky" ;;
+    1) echo "Mainly clear" ;;
+    2) echo "Partly cloudy" ;;
+    3) echo "Overcast" ;;
+    45|48) echo "Foggy" ;;
+    51|53|55) echo "Drizzle" ;;
+    56|57) echo "Freezing drizzle" ;;
+    61|63|65) echo "Rain" ;;
+    66|67) echo "Freezing rain" ;;
+    71|73|75) echo "Snowfall" ;;
+    77) echo "Snow grains" ;;
+    80|81|82) echo "Rain showers" ;;
+    85|86) echo "Snow showers" ;;
+    95) echo "Thunderstorm" ;;
+    96|99) echo "Thunderstorm with hail" ;;
+    *) echo "Unknown" ;;
+  esac
+}
+
+# Weather code icons
+weather_icon() {
+  case "$1" in
+    0) echo "☀️" ;;
+    1) echo "🌤️" ;;
+    2) echo "⛅" ;;
+    3) echo "☁️" ;;
+    45|48) echo "🌫️" ;;
+    51|53|55) echo "🌦️" ;;
+    56|57) echo "🌧️❄️" ;;
+    61|63|65) echo "🌧️" ;;
+    66|67) echo "🌧️❄️" ;;
+    71|73|75) echo "🌨️" ;;
+    77) echo "🌨️" ;;
+    80|81|82) echo "🌧️" ;;
+    85|86) echo "🌨️" ;;
+    95) echo "⛈️" ;;
+    96|99) echo "⛈️🧊" ;;
+    *) echo "❓" ;;
+  esac
+}
+
+# Wind direction from degrees
+wind_direction() {
+  local deg=$1
+  if (( deg >= 337 || deg < 23 )); then echo "N"
+  elif (( deg >= 23 && deg < 68 )); then echo "NE"
+  elif (( deg >= 68 && deg < 113 )); then echo "E"
+  elif (( deg >= 113 && deg < 158 )); then echo "SE"
+  elif (( deg >= 158 && deg < 203 )); then echo "S"
+  elif (( deg >= 203 && deg < 248 )); then echo "SW"
+  elif (( deg >= 248 && deg < 293 )); then echo "W"
+  elif (( deg >= 293 && deg < 337 )); then echo "NW"
+  fi
+}
+
+# Color helpers
+bold="\033[1m"
+dim="\033[2m"
+cyan="\033[36m"
+yellow="\033[33m"
+blue="\033[34m"
+green="\033[32m"
+red="\033[31m"
+magenta="\033[35m"
+reset="\033[0m"
+
+usage() {
+  echo -e "${bold}fledge weather${reset} v${VERSION}"
+  echo ""
+  echo -e "  Terminal weather reports powered by Open-Meteo"
+  echo ""
+  echo -e "${bold}USAGE:${reset}"
+  echo "  fledge weather [OPTIONS] [LOCATION]"
+  echo ""
+  echo -e "${bold}ARGS:${reset}"
+  echo "  [LOCATION]    City name (default: auto-detect from IP)"
+  echo ""
+  echo -e "${bold}OPTIONS:${reset}"
+  echo "  -f, --forecast    Show 7-day forecast"
+  echo "  -u, --units       Units: metric (default) or imperial"
+  echo "  -h, --help        Show this help"
+  echo "  -v, --version     Show version"
+}
+
+# Defaults
+FORECAST=false
+UNITS="metric"
+LOCATION=""
+
+# Parse args
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -f|--forecast) FORECAST=true; shift ;;
+    -u|--units) UNITS="$2"; shift 2 ;;
+    -h|--help) usage; exit 0 ;;
+    -v|--version) echo "fledge-weather v${VERSION}"; exit 0 ;;
+    -*) echo "Unknown option: $1"; usage; exit 1 ;;
+    *) LOCATION="$1"; shift ;;
+  esac
+done
+
+# Check for curl and jq
+for cmd in curl jq; do
+  if ! command -v "$cmd" &>/dev/null; then
+    echo -e "${red}Error:${reset} '$cmd' is required but not found. Install it and try again."
+    exit 1
+  fi
+done
+
+# Resolve location
+if [[ -z "$LOCATION" ]]; then
+  # Auto-detect via IP geolocation
+  GEO=$(curl -sf "https://ipapi.co/json/" 2>/dev/null || echo "")
+  if [[ -z "$GEO" ]]; then
+    echo -e "${red}Error:${reset} Could not auto-detect location. Please specify a city name."
+    exit 1
+  fi
+  LAT=$(echo "$GEO" | jq -r '.latitude')
+  LON=$(echo "$GEO" | jq -r '.longitude')
+  CITY=$(echo "$GEO" | jq -r '.city')
+  REGION=$(echo "$GEO" | jq -r '.region')
+  COUNTRY=$(echo "$GEO" | jq -r '.country_name')
+  LOCATION_STR="${CITY}, ${REGION}, ${COUNTRY}"
+else
+  # Geocode the location name
+  ENCODED=$(python3 -c "import urllib.parse; print(urllib.parse.quote('$LOCATION'))" 2>/dev/null || echo "$LOCATION")
+  GEO=$(curl -sf "${GEOCODE_BASE}/search?name=${ENCODED}&count=1&language=en" 2>/dev/null || echo "")
+  if [[ -z "$GEO" ]] || [[ "$(echo "$GEO" | jq '.results | length')" == "0" ]]; then
+    echo -e "${red}Error:${reset} Could not find location '${LOCATION}'."
+    exit 1
+  fi
+  LAT=$(echo "$GEO" | jq -r '.results[0].latitude')
+  LON=$(echo "$GEO" | jq -r '.results[0].longitude')
+  CITY=$(echo "$GEO" | jq -r '.results[0].name')
+  COUNTRY=$(echo "$GEO" | jq -r '.results[0].country')
+  ADMIN=$(echo "$GEO" | jq -r '.results[0].admin1 // empty')
+  if [[ -n "$ADMIN" ]]; then
+    LOCATION_STR="${CITY}, ${ADMIN}, ${COUNTRY}"
+  else
+    LOCATION_STR="${CITY}, ${COUNTRY}"
+  fi
+fi
+
+# Build API URL
+TEMP_UNIT="celsius"
+WIND_UNIT="kmh"
+PRECIP_UNIT="mm"
+TEMP_SYMBOL="°C"
+WIND_SYMBOL="km/h"
+if [[ "$UNITS" == "imperial" ]]; then
+  TEMP_UNIT="fahrenheit"
+  WIND_UNIT="mph"
+  PRECIP_UNIT="inch"
+  TEMP_SYMBOL="°F"
+  WIND_SYMBOL="mph"
+fi
+
+CURRENT_PARAMS="temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m,surface_pressure,uv_index"
+DAILY_PARAMS="weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_sum,wind_speed_10m_max"
+
+URL="${API_BASE}/forecast?latitude=${LAT}&longitude=${LON}&current=${CURRENT_PARAMS}&daily=${DAILY_PARAMS}&temperature_unit=${TEMP_UNIT}&wind_speed_unit=${WIND_UNIT}&precipitation_unit=${PRECIP_UNIT}&timezone=auto&forecast_days=7"
+
+WEATHER=$(curl -sf "$URL" 2>/dev/null || echo "")
+if [[ -z "$WEATHER" ]]; then
+  echo -e "${red}Error:${reset} Could not fetch weather data."
+  exit 1
+fi
+
+# Parse current weather
+TEMP=$(echo "$WEATHER" | jq -r '.current.temperature_2m')
+FEELS=$(echo "$WEATHER" | jq -r '.current.apparent_temperature')
+HUMIDITY=$(echo "$WEATHER" | jq -r '.current.relative_humidity_2m')
+CODE=$(echo "$WEATHER" | jq -r '.current.weather_code')
+WIND=$(echo "$WEATHER" | jq -r '.current.wind_speed_10m')
+WIND_DIR_DEG=$(echo "$WEATHER" | jq -r '.current.wind_direction_10m')
+PRESSURE=$(echo "$WEATHER" | jq -r '.current.surface_pressure')
+UV=$(echo "$WEATHER" | jq -r '.current.uv_index')
+
+WIND_DIR=$(wind_direction "${WIND_DIR_DEG%.*}")
+ICON=$(weather_icon "$CODE")
+DESC=$(weather_desc "$CODE")
+
+# Today's daily data
+TODAY_HIGH=$(echo "$WEATHER" | jq -r '.daily.temperature_2m_max[0]')
+TODAY_LOW=$(echo "$WEATHER" | jq -r '.daily.temperature_2m_min[0]')
+SUNRISE=$(echo "$WEATHER" | jq -r '.daily.sunrise[0]' | cut -dT -f2)
+SUNSET=$(echo "$WEATHER" | jq -r '.daily.sunset[0]' | cut -dT -f2)
+TODAY_PRECIP=$(echo "$WEATHER" | jq -r '.daily.precipitation_sum[0]')
+TIMEZONE=$(echo "$WEATHER" | jq -r '.timezone')
+
+# Display current weather
+echo ""
+echo -e "${bold}${cyan}  Weather for ${LOCATION_STR}${reset}"
+echo -e "${dim}  ${TIMEZONE}${reset}"
+echo ""
+echo -e "  ${ICON}  ${bold}${TEMP}${TEMP_SYMBOL}${reset}  ${DESC}"
+echo ""
+echo -e "  ${dim}├${reset} Feels like    ${bold}${FEELS}${TEMP_SYMBOL}${reset}"
+echo -e "  ${dim}├${reset} High / Low    ${red}${TODAY_HIGH}${reset} / ${blue}${TODAY_LOW}${TEMP_SYMBOL}${reset}"
+echo -e "  ${dim}├${reset} Humidity      ${HUMIDITY}%"
+echo -e "  ${dim}├${reset} Wind          ${WIND} ${WIND_SYMBOL} ${WIND_DIR}"
+echo -e "  ${dim}├${reset} Pressure      ${PRESSURE} hPa"
+echo -e "  ${dim}├${reset} UV Index      ${UV}"
+echo -e "  ${dim}├${reset} Precipitation ${TODAY_PRECIP} ${PRECIP_UNIT}"
+echo -e "  ${dim}├${reset} Sunrise       ${yellow}${SUNRISE}${reset}"
+echo -e "  ${dim}└${reset} Sunset        ${magenta}${SUNSET}${reset}"
+echo ""
+
+# 7-day forecast
+if [[ "$FORECAST" == "true" ]]; then
+  echo -e "${bold}  7-Day Forecast${reset}"
+  echo -e "  ${dim}─────────────────────────────────────────────────${reset}"
+
+  DAYS=$(echo "$WEATHER" | jq -r '.daily.time | length')
+  for (( i=0; i<DAYS; i++ )); do
+    DATE=$(echo "$WEATHER" | jq -r ".daily.time[$i]")
+    DAY_NAME=$(date -j -f "%Y-%m-%d" "$DATE" "+%a" 2>/dev/null || date -d "$DATE" "+%a" 2>/dev/null || echo "$DATE")
+    D_CODE=$(echo "$WEATHER" | jq -r ".daily.weather_code[$i]")
+    D_HIGH=$(echo "$WEATHER" | jq -r ".daily.temperature_2m_max[$i]")
+    D_LOW=$(echo "$WEATHER" | jq -r ".daily.temperature_2m_min[$i]")
+    D_PRECIP=$(echo "$WEATHER" | jq -r ".daily.precipitation_sum[$i]")
+    D_WIND=$(echo "$WEATHER" | jq -r ".daily.wind_speed_10m_max[$i]")
+    D_ICON=$(weather_icon "$D_CODE")
+    D_DESC=$(weather_desc "$D_CODE")
+
+    if [[ $i -eq 0 ]]; then
+      DAY_LABEL="${bold}Today${reset}"
+    else
+      DAY_LABEL="${bold}${DAY_NAME}${reset} "
+    fi
+
+    printf "  ${D_ICON}  %-10b ${red}%5s${reset} / ${blue}%-5s${reset}  💨 %-5s  💧 %-5s  %s\n" \
+      "$DAY_LABEL" "${D_HIGH}°" "${D_LOW}°" "${D_WIND}" "${D_PRECIP}" "$D_DESC"
+  done
+  echo ""
+fi
+
+echo -e "${dim}  Powered by Open-Meteo (open-meteo.com) — free, no API key required${reset}"
+echo ""

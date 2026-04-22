@@ -1,0 +1,11 @@
+[plugin]
+name = "fledge-weather"
+version = "0.1.0"
+description = "Terminal weather reports powered by Open-Meteo"
+authors = ["CorvidLabs"]
+repository = "https://github.com/CorvidLabs/fledge-weather"
+
+[[commands]]
+name = "weather"
+binary = "bin/fledge-weather"
+description = "Show current weather and forecast in the terminal"
