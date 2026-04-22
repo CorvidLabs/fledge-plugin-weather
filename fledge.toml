@@ -1,0 +1,8 @@
+[project]
+name = "fledge-weather"
+language = "shell"
+
+[tasks]
+test = "bash bin/fledge-weather --help && bash bin/fledge-weather --version"
+lint = "shellcheck bin/fledge-weather"
+check = "bash -n bin/fledge-weather"
