@@ -1,9 +1,9 @@
 [plugin]
-name = "fledge-weather"
+name = "fledge-plugin-weather"
 version = "0.1.0"
 description = "Terminal weather reports powered by Open-Meteo"
 authors = ["CorvidLabs"]
-repository = "https://github.com/CorvidLabs/fledge-weather"
+repository = "https://github.com/CorvidLabs/fledge-plugin-weather"
 
 [[commands]]
 name = "weather"

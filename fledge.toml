@@ -1,5 +1,5 @@
 [project]
-name = "fledge-weather"
+name = "fledge-plugin-weather"
 language = "shell"
 
 [tasks]

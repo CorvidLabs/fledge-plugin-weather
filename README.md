@@ -1,11 +1,11 @@
-# fledge-weather
+# fledge-plugin-weather
 
 A [fledge](https://github.com/CorvidLabs/fledge) plugin that shows current weather and 7-day forecasts in your terminal, powered by [Open-Meteo](https://open-meteo.com).
 
 ## Install
 
 ```bash
-fledge plugin install CorvidLabs/fledge-weather
+fledge plugin install CorvidLabs/fledge-plugin-weather
 ```
 
 ## Usage
