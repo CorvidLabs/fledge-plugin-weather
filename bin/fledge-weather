@@ -69,7 +69,6 @@ dim="\033[2m"
 cyan="\033[36m"
 yellow="\033[33m"
 blue="\033[34m"
-green="\033[32m"
 red="\033[31m"
 magenta="\033[35m"
 reset="\033[0m"
@@ -101,7 +100,11 @@ LOCATION=""
 while [[ $# -gt 0 ]]; do
   case "$1" in
     -f|--forecast) FORECAST=true; shift ;;
-    -u|--units) UNITS="$2"; shift 2 ;;
+    -u|--units)
+      if [[ -z "${2:-}" ]]; then
+        echo "Error: --units requires a value (metric or imperial)"; exit 1
+      fi
+      UNITS="$2"; shift 2 ;;
     -h|--help) usage; exit 0 ;;
     -v|--version) echo "fledge-weather v${VERSION}"; exit 0 ;;
     -*) echo "Unknown option: $1"; usage; exit 1 ;;
@@ -133,7 +136,7 @@ if [[ -z "$LOCATION" ]]; then
   LOCATION_STR="${CITY}, ${REGION}, ${COUNTRY}"
 else
   # Geocode the location name
-  ENCODED=$(python3 -c "import urllib.parse; print(urllib.parse.quote('$LOCATION'))" 2>/dev/null || echo "$LOCATION")
+  ENCODED=$(LOCATION="$LOCATION" python3 -c "import urllib.parse, os; print(urllib.parse.quote(os.environ['LOCATION']))" 2>/dev/null || echo "$LOCATION")
   GEO=$(curl -sf "${GEOCODE_BASE}/search?name=${ENCODED}&count=1&language=en" 2>/dev/null || echo "")
   if [[ -z "$GEO" ]] || [[ "$(echo "$GEO" | jq '.results | length')" == "0" ]]; then
     echo -e "${red}Error:${reset} Could not find location '${LOCATION}'."
