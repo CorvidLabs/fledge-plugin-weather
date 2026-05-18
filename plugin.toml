@@ -8,4 +8,9 @@ repository = "https://github.com/CorvidLabs/fledge-plugin-weather"
 [[commands]]
 name = "weather"
 binary = "bin/fledge-weather"
-description = "Show current weather and forecast in the terminal"
+description = "Show current weather and forecast in the terminal. Pass a city name as location, or omit to auto-detect from IP."
+args = [
+    { name = "location", type = "string", required = false, description = "City name to look up (e.g. 'Denver', 'San Francisco', 'Tokyo'). Omit to auto-detect from your public IP." },
+    { name = "forecast", type = "boolean", required = false, description = "Include a 7-day forecast in addition to current conditions." },
+    { name = "units", type = "string", required = false, description = "Temperature/distance units: 'metric' (default, °C and km/h) or 'imperial' (°F and mph)." },
+]

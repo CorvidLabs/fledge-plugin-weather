@@ -85,6 +85,7 @@ usage() {
   echo "  [LOCATION]    City name (default: auto-detect from IP)"
   echo ""
   echo -e "${bold}OPTIONS:${reset}"
+  echo "  --location <city> Same as the positional [LOCATION] (for tool interfaces)"
   echo "  -f, --forecast    Show 7-day forecast"
   echo "  -u, --units       Units: metric (default) or imperial"
   echo "  -h, --help        Show this help"
@@ -96,15 +97,30 @@ FORECAST=false
 UNITS="metric"
 LOCATION=""
 
-# Parse args
+# Parse args. Two callers to support:
+#  - CLI users:  `fledge plugins run weather -- Denver`         (positional)
+#  - LLM tools:  `[weather(location="Denver", forecast=true)]`  (named)
+# Fledge maps named tool args to `--<name> <value>` for string args and
+# `--<name>` (no value) for boolean trues. We accept both shapes here.
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    -f|--forecast) FORECAST=true; shift ;;
+    -f|--forecast)
+      # Tool layer sends boolean as either `--forecast` (true) or
+      # `--forecast false` (false); CLI users just pass `-f`. Peek the
+      # next arg: if it's a literal "false"/"true", consume it.
+      if [[ "${2:-}" == "true" ]]; then FORECAST=true; shift 2
+      elif [[ "${2:-}" == "false" ]]; then FORECAST=false; shift 2
+      else FORECAST=true; shift; fi ;;
     -u|--units)
       if [[ -z "${2:-}" ]]; then
         echo "Error: --units requires a value (metric or imperial)"; exit 1
       fi
       UNITS="$2"; shift 2 ;;
+    --location)
+      if [[ -z "${2:-}" ]]; then
+        echo "Error: --location requires a value (city name)"; exit 1
+      fi
+      LOCATION="$2"; shift 2 ;;
     -h|--help) usage; exit 0 ;;
     -v|--version) echo "fledge-weather v${VERSION}"; exit 0 ;;
     -*) echo "Unknown option: $1"; usage; exit 1 ;;
