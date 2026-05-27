@@ -1,9 +1,81 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-VERSION="0.1.0"
+VERSION="0.1.2"
 API_BASE="https://api.open-meteo.com/v1"
 GEOCODE_BASE="https://geocoding-api.open-meteo.com/v1"
+
+# URL-encode using jq's @uri (RFC 3986 percent-encoding).
+url_encode() {
+  printf '%s' "$1" | jq -sRr @uri
+}
+
+# Convert a full country name to an upper-case ISO-3166 alpha-2 code.
+# Open-Meteo's geocoding API filters by alpha-2 (e.g. BR, JP, US). Only
+# unambiguous country names are recognized here; bare 2-letter suffixes are
+# deliberately not auto-converted because they collide with US state codes
+# (e.g. "Springfield, IL" — Illinois, not Israel).
+country_to_iso2() {
+  local raw="$1"
+  raw="${raw#"${raw%%[![:space:]]*}"}"
+  raw="${raw%"${raw##*[![:space:]]}"}"
+  case "$(echo "$raw" | tr '[:upper:]' '[:lower:]')" in
+    brazil|brasil) echo "BR" ;;
+    "united states"|usa|"u.s."|"u.s.a."|america) echo "US" ;;
+    "united kingdom"|uk|britain|"great britain"|england|scotland|wales) echo "GB" ;;
+    japan) echo "JP" ;;
+    china) echo "CN" ;;
+    india) echo "IN" ;;
+    france) echo "FR" ;;
+    germany) echo "DE" ;;
+    spain) echo "ES" ;;
+    italy) echo "IT" ;;
+    mexico) echo "MX" ;;
+    canada) echo "CA" ;;
+    australia) echo "AU" ;;
+    "new zealand") echo "NZ" ;;
+    argentina) echo "AR" ;;
+    chile) echo "CL" ;;
+    colombia) echo "CO" ;;
+    peru) echo "PE" ;;
+    portugal) echo "PT" ;;
+    netherlands|holland) echo "NL" ;;
+    belgium) echo "BE" ;;
+    switzerland) echo "CH" ;;
+    sweden) echo "SE" ;;
+    norway) echo "NO" ;;
+    denmark) echo "DK" ;;
+    finland) echo "FI" ;;
+    ireland) echo "IE" ;;
+    poland) echo "PL" ;;
+    russia) echo "RU" ;;
+    ukraine) echo "UA" ;;
+    turkey|türkiye) echo "TR" ;;
+    "south korea"|korea) echo "KR" ;;
+    "north korea") echo "KP" ;;
+    thailand) echo "TH" ;;
+    vietnam) echo "VN" ;;
+    indonesia) echo "ID" ;;
+    philippines) echo "PH" ;;
+    singapore) echo "SG" ;;
+    malaysia) echo "MY" ;;
+    "south africa") echo "ZA" ;;
+    egypt) echo "EG" ;;
+    nigeria) echo "NG" ;;
+    kenya) echo "KE" ;;
+    morocco) echo "MA" ;;
+    israel) echo "IL" ;;
+    "saudi arabia") echo "SA" ;;
+    "united arab emirates"|uae) echo "AE" ;;
+    iran) echo "IR" ;;
+    iraq) echo "IQ" ;;
+    pakistan) echo "PK" ;;
+    bangladesh) echo "BD" ;;
+    greece) echo "GR" ;;
+    austria) echo "AT" ;;
+    *) echo "" ;;
+  esac
+}
 
 # Weather code descriptions
 weather_desc() {
@@ -151,18 +223,63 @@ if [[ -z "$LOCATION" ]]; then
   COUNTRY=$(echo "$GEO" | jq -r '.country_name')
   LOCATION_STR="${CITY}, ${REGION}, ${COUNTRY}"
 else
-  # Geocode the location name
-  ENCODED=$(LOCATION="$LOCATION" python3 -c "import urllib.parse, os; print(urllib.parse.quote(os.environ['LOCATION']))" 2>/dev/null || echo "$LOCATION")
-  GEO=$(curl -sf "${GEOCODE_BASE}/search?name=${ENCODED}&count=1&language=en" 2>/dev/null || echo "")
-  if [[ -z "$GEO" ]] || [[ "$(echo "$GEO" | jq '.results | length')" == "0" ]]; then
-    echo -e "${red}Error:${reset} Could not find location '${LOCATION}'."
+  # Parse optional country suffix, e.g. "São Paulo, Brazil" → name="São Paulo"
+  # + countryCode=BR for Open-Meteo's geocoding filter. Only full country
+  # names are extracted — bare 2-letter suffixes are left in the name so US
+  # state codes don't get misread as country codes (Springfield, IL stays as
+  # Illinois rather than collapsing onto Israel).
+  QUERY="$LOCATION"
+  COUNTRY_CODE=""
+  if [[ "$LOCATION" == *,* ]]; then
+    QUERY="${LOCATION%,*}"
+    SUFFIX="${LOCATION##*,}"
+    QUERY="${QUERY%"${QUERY##*[![:space:]]}"}"
+    COUNTRY_CODE=$(country_to_iso2 "$SUFFIX")
+    if [[ -z "$COUNTRY_CODE" ]]; then
+      # Unrecognized suffix — keep the full string so e.g. "Springfield, IL"
+      # still reaches the geocoder verbatim.
+      QUERY="$LOCATION"
+    fi
+  fi
+  QUERY="${QUERY#"${QUERY%%[![:space:]]*}"}"
+  QUERY="${QUERY%"${QUERY##*[![:space:]]}"}"
+
+  if [[ -z "$QUERY" ]]; then
+    echo -e "${red}Error:${reset} Empty location after parsing '${LOCATION}'."
     exit 1
   fi
-  LAT=$(echo "$GEO" | jq -r '.results[0].latitude')
-  LON=$(echo "$GEO" | jq -r '.results[0].longitude')
-  CITY=$(echo "$GEO" | jq -r '.results[0].name')
-  COUNTRY=$(echo "$GEO" | jq -r '.results[0].country')
-  ADMIN=$(echo "$GEO" | jq -r '.results[0].admin1 // empty')
+
+  ENCODED=$(url_encode "$QUERY")
+  # count=10 lets us pick the right match when a name is ambiguous (Tokyo, JP
+  # vs. Tokyo, ND); count=1 had returned whatever the API ranked first, which
+  # for some queries was a small US town rather than the obvious city.
+  GEO_URL="${GEOCODE_BASE}/search?name=${ENCODED}&count=10&language=en&format=json"
+  if [[ -n "$COUNTRY_CODE" ]]; then
+    GEO_URL="${GEO_URL}&countryCode=${COUNTRY_CODE}"
+  fi
+
+  GEO=$(curl -sf "$GEO_URL" 2>/dev/null || echo "")
+  if [[ -z "$GEO" ]] || [[ "$(echo "$GEO" | jq '.results | length // 0')" == "0" ]]; then
+    echo -e "${red}Error:${reset} Could not find location '${LOCATION}'."
+    if [[ -z "$COUNTRY_CODE" ]]; then
+      echo -e "${dim}  Tip: append a country to disambiguate, e.g. '${QUERY}, Brazil'.${reset}"
+    fi
+    exit 1
+  fi
+
+  # Prefer an exact (case-insensitive) name match; otherwise take the
+  # highest-population result, which Open-Meteo orders first.
+  IDX=$(jq --arg q "$QUERY" -r '
+    .results
+    | (map(.name | ascii_downcase) | index($q | ascii_downcase))
+      // 0
+  ' <<<"$GEO")
+
+  LAT=$(echo "$GEO" | jq -r ".results[$IDX].latitude")
+  LON=$(echo "$GEO" | jq -r ".results[$IDX].longitude")
+  CITY=$(echo "$GEO" | jq -r ".results[$IDX].name")
+  COUNTRY=$(echo "$GEO" | jq -r ".results[$IDX].country")
+  ADMIN=$(echo "$GEO" | jq -r ".results[$IDX].admin1 // empty")
   if [[ -n "$ADMIN" ]]; then
     LOCATION_STR="${CITY}, ${ADMIN}, ${COUNTRY}"
   else

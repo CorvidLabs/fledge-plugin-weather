@@ -1,6 +1,6 @@
 ---
 module: weather
-version: 1
+version: 2
 status: stable
 files:
   - bin/fledge-weather
@@ -32,7 +32,7 @@ The plugin registers one command:
 
 | Name | Type | Required | Default | Description |
 |------|------|----------|---------|-------------|
-| `location` | string | no | auto-detect from public IP | City name (e.g. "Denver", "San Francisco", "Tokyo, Japan") |
+| `location` | string | no | auto-detect from public IP | City name. Append a country name to disambiguate, e.g. "São Paulo, Brazil" — recognized country names are mapped to Open-Meteo's `countryCode` filter. Bare 2-letter suffixes are treated as part of the name to avoid colliding with US state codes (so "Springfield, IL" still resolves to Illinois). |
 | `forecast` | boolean | no | `false` | Include a 7-day forecast in addition to current conditions |
 | `units` | string | no | `metric` | `metric` (°C, km/h) or `imperial` (°F, mph) |
 
@@ -83,12 +83,13 @@ And the binary prints current conditions in °F + 7-day forecast
 ## Dependencies
 
 - `curl` — HTTP client
-- `jq` — JSON parsing
+- `jq` — JSON parsing and URL encoding (via `@uri`)
 - Open-Meteo public APIs (no key) — forecast + geocoding
-- `ipinfo.io` (no key) — IP geolocation fallback when no location given
+- `ipapi.co` (no key) — IP geolocation fallback when no location given
 
 ## Change Log
 
 | Version | Date | Changes |
 |---------|------|---------|
 | 1 | 2026-05-18 | Initial spec. Adds named-arg support via `args` block in plugin.toml + `--location` / `--forecast` / `--units` flag forms in the binary so the tool interface works as well as the CLI. Fixes [merlin#449](https://github.com/CorvidLabs/merlin/issues/449). |
+| 2 | 2026-05-27 | Fix geocoding for international locations: request 10 candidates and prefer exact name matches (was picking the first arbitrary result for ambiguous names); parse trailing country names into Open-Meteo's `countryCode` filter; switch URL encoding from `python3` to `jq @uri` and drop the Python dependency. Fixes [#2](https://github.com/CorvidLabs/fledge-plugin-weather/issues/2). |
