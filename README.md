@@ -19,7 +19,11 @@ fledge weather
 # Specify a city
 fledge weather "New York"
 fledge weather Tokyo
-fledge weather "Sao Paulo"
+fledge weather "São Paulo"
+
+# Disambiguate by appending a country name
+fledge weather "São Paulo, Brazil"
+fledge weather "Paris, France"
 
 # 7-day forecast
 fledge weather --forecast
@@ -42,8 +46,7 @@ fledge weather -u imperial -f "Chicago"
 ## Requirements
 
 - `curl` -- for API requests
-- `jq` -- for JSON parsing
-- `python3` -- for URL encoding (only when specifying a location name)
+- `jq` -- for JSON parsing (also used for URL encoding)
 
 No API key required. Open-Meteo is free and open-source.
 
