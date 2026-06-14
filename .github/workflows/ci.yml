@@ -3,15 +3,26 @@ name: CI
 on:
   push:
     branches: [main]
+    paths:
+      - bin/**
+      - .github/workflows/ci.yml
   pull_request:
     branches: [main]
+    paths:
+      - bin/**
+      - .github/workflows/ci.yml
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   lint:
     name: ShellCheck
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Install ShellCheck
         run: sudo apt-get install -y shellcheck
       - name: Lint all shell scripts
@@ -20,8 +31,9 @@ jobs:
   smoke-test:
     name: Smoke Test
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Check script syntax
         run: bash -n bin/fledge-weather
       - name: Show help
