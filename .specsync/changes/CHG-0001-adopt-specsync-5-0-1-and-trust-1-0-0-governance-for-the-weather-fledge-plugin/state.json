@@ -27,14 +27,7 @@
   "no_spec_change": false,
   "no_spec_change_rationale": null,
   "acceptance_criteria": [
-    "Strict SpecSync validation passes at advisory threshold 0; Claude",
-    "Cursor",
-    "Codex",
-    "and Gemini integrations are installed; Trust doctor passes; Bash syntax",
-    "ShellCheck",
-    "help",
-    "version",
-    "and manifest checks pass without live network access"
+    "Strict SpecSync validation passes at advisory threshold 0; Claude, Cursor, Codex, and Gemini integrations are installed; Trust doctor passes; Bash syntax, ShellCheck, help, version, and manifest checks pass without live network access"
   ],
   "selected_artifacts": [
     "context",
