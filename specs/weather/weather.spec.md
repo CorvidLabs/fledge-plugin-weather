@@ -24,6 +24,8 @@ Single-shot terminal weather report (current conditions + optional 7-day forecas
 
 The plugin registers one command:
 
+### Command Interface
+
 | Command | Args | Description |
 |---------|------|-------------|
 | `weather` | `location?`, `forecast?`, `units?` | Print current weather + optional 7-day forecast |

@@ -1,0 +1,15 @@
+{
+  "bootstrap_policy": {
+    "base_commit": "4c2061a36f61e00565410abfa9927a185d88cfd7",
+    "digest": "e8d93002f1801da918ac060b0a9be0d1c196eff193ccb265ed21ace35c051a81",
+    "path": ".specsync/sdd.json"
+  },
+  "generated_at": 1783883591,
+  "requirements_needing_ids": [
+    {
+      "action": "review and assign one stable ID per durable requirement",
+      "path": "specs/weather/requirements.md",
+      "suggested_first_id": "REQ-weather-001"
+    }
+  ]
+}

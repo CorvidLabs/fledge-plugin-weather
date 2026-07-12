@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "id": "CHG-0001-adopt-specsync-5-0-1-and-trust-1-0-0-governance-for-the-weather-fledge-plugin",
+  "slug": "adopt-specsync-5-0-1-and-trust-1-0-0-governance-for-the-weather-fledge-plugin",
+  "title": "Adopt SpecSync 5.0.1 and Trust 1.0.0 governance for the weather Fledge plugin",
+  "description": "Adopt SpecSync 5.0.1 and Trust 1.0.0 governance for the weather Fledge plugin",
+  "kind": "migration",
+  "state": "draft",
+  "base_commit": "4c2061a36f61e00565410abfa9927a185d88cfd7",
+  "created_at": 1783883642,
+  "updated_at": 1783883658,
+  "affected_specs": [
+    "weather"
+  ],
+  "affected_paths": [
+    "bin/",
+    "plugin.toml",
+    "fledge.toml",
+    ".github/",
+    ".specsync/",
+    "specs/",
+    ".trust.toml",
+    ".augur.toml",
+    ".attest.json",
+    "AGENTS.md"
+  ],
+  "no_spec_change": false,
+  "no_spec_change_rationale": null,
+  "acceptance_criteria": [
+    "Strict SpecSync validation passes at advisory threshold 0; Claude",
+    "Cursor",
+    "Codex",
+    "and Gemini integrations are installed; Trust doctor passes; Bash syntax",
+    "ShellCheck",
+    "help",
+    "version",
+    "and manifest checks pass without live network access"
+  ],
+  "selected_artifacts": [
+    "context",
+    "research",
+    "design",
+    "plan",
+    "tasks",
+    "testing",
+    "docs"
+  ],
+  "dependencies": [],
+  "answers": {
+    "architecture_risk": "yes",
+    "public_contract": "no"
+  }
+}
