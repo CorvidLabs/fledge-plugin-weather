@@ -5,11 +5,5 @@
     "path": ".specsync/sdd.json"
   },
   "generated_at": 1783883591,
-  "requirements_needing_ids": [
-    {
-      "action": "review and assign one stable ID per durable requirement",
-      "path": "specs/weather/requirements.md",
-      "suggested_first_id": "REQ-weather-001"
-    }
-  ]
+  "requirements_needing_ids": []
 }

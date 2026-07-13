@@ -5,10 +5,10 @@
   "title": "Adopt SpecSync 5.0.1 and Trust 1.0.0 governance for the weather Fledge plugin",
   "description": "Adopt SpecSync 5.0.1 and Trust 1.0.0 governance for the weather Fledge plugin",
   "kind": "migration",
-  "state": "draft",
+  "state": "implementing",
   "base_commit": "4c2061a36f61e00565410abfa9927a185d88cfd7",
   "created_at": 1783883642,
-  "updated_at": 1783883658,
+  "updated_at": 1783954477,
   "affected_specs": [
     "weather"
   ],
@@ -27,7 +27,10 @@
   "no_spec_change": false,
   "no_spec_change_rationale": null,
   "acceptance_criteria": [
-    "Strict SpecSync validation passes at advisory threshold 0; Claude, Cursor, Codex, and Gemini integrations are installed; Trust doctor passes; Bash syntax, ShellCheck, help, version, and manifest checks pass without live network access"
+    "Strict SpecSync validation passes at advisory threshold 0.",
+    "Claude, Cursor, Codex, and Gemini integrations are installed.",
+    "Trust doctor passes.",
+    "Bash syntax, ShellCheck, help, version, and manifest checks pass without live network access."
   ],
   "selected_artifacts": [
     "context",

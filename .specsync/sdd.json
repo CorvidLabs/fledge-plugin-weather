@@ -33,7 +33,7 @@
     "specs/"
   ],
   "verification_commands": [
-    "bash -n bin/fledge-weather && shellcheck bin/fledge-weather && bash bin/fledge-weather --help && bash bin/fledge-weather --version && grep -q 'binary = \"bin/fledge-weather\"' plugin.toml"
+    "fledge lanes run verify"
   ],
   "custom_artifacts": {},
   "principles_file": null

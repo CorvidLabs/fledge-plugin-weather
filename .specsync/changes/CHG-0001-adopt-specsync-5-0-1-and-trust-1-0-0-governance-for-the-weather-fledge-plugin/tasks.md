@@ -9,5 +9,7 @@ artifact: tasks
 - [x] Add stable requirement IDs and complete companion artifacts.
 - [x] Install Claude, Cursor, Codex, and Gemini integrations.
 - [x] Add Trust, Augur, Attest, Fledge lane, and immutable workflow configuration.
-- [x] Run strict SpecSync and deterministic native verification.
-- [ ] Obtain definition and closing approvals from an authorized reviewer.
+- [x] Run deterministic native verification locally.
+- [ ] Obtain definition approval and activate the governed lifecycle.
+- [ ] Run strict SpecSync and full Trust verification against the active change.
+- [ ] Obtain closing approval after the acceptance evidence is recorded.
