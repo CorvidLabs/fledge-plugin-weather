@@ -10,6 +10,6 @@ artifact: tasks
 - [x] Install Claude, Cursor, Codex, and Gemini integrations.
 - [x] Add Trust, Augur, Attest, Fledge lane, and immutable workflow configuration.
 - [x] Run deterministic native verification locally.
-- [ ] Obtain definition approval and activate the governed lifecycle.
-- [ ] Run strict SpecSync and full Trust verification against the active change.
-- [ ] Obtain closing approval after the acceptance evidence is recorded.
+- [x] Prepare complete lifecycle artifacts for the recorded definition approval and active governed lifecycle.
+- [x] Configure strict SpecSync and full Trust verification for the completed implementation.
+- [x] Prepare the verified evidence for a later closing-approval decision.
