@@ -4,10 +4,21 @@ spec: weather.spec.md
 
 ## Requirements
 
-- **REQ-weather-001** (stable): The plugin shall accept positional CLI locations and named `location`, `forecast`, and `units` tool arguments.
-- **REQ-weather-002** (stable): The plugin shall auto-detect a location when none is supplied and geocode explicit locations through the documented public services.
-- **REQ-weather-003** (stable): The plugin shall render current conditions and optionally a seven-day forecast using metric or imperial units.
-- **REQ-weather-004** (stable): The plugin shall return a non-zero result with an actionable message for missing dependencies, invalid options, unresolved locations, and network failures.
+### REQ-weather-001
+
+The plugin SHALL accept positional CLI locations and named `location`, `forecast`, and `units` tool arguments.
+
+### REQ-weather-002
+
+The plugin SHALL auto-detect a location when none is supplied and geocode explicit locations through the documented public services.
+
+### REQ-weather-003
+
+The plugin SHALL render current conditions and optionally a seven-day forecast using metric or imperial units.
+
+### REQ-weather-004
+
+The plugin SHALL return a non-zero result with an actionable message for missing dependencies, invalid options, unresolved locations, and network failures.
 
 ## Constraints
 
