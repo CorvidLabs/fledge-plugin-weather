@@ -1,6 +1,6 @@
 ---
 module: weather
-version: 2
+version: 3
 status: stable
 files:
   - bin/fledge-weather
@@ -93,5 +93,7 @@ And the binary prints current conditions in °F + 7-day forecast
 
 | Version | Date | Changes |
 |---------|------|---------|
-| 1 | 2026-05-18 | Initial spec. Adds named-arg support via `args` block in plugin.toml + `--location` / `--forecast` / `--units` flag forms in the binary so the tool interface works as well as the CLI. Fixes [merlin#449](https://github.com/CorvidLabs/merlin/issues/449). |
-| 2 | 2026-05-27 | Fix geocoding for international locations: request 10 candidates and prefer exact name matches (was picking the first arbitrary result for ambiguous names); parse trailing country names into Open-Meteo's `countryCode` filter; switch URL encoding from `python3` to `jq @uri` and drop the Python dependency. Fixes [#2](https://github.com/CorvidLabs/fledge-plugin-weather/issues/2). |
+| 1 | 2026-05-18 | Added named-argument support for the Weather command. |
+| 2 | 2026-05-27 | Corrected international geocoding and removed the Python dependency. |
+| 3 | 2026-07-13 | Reconciled existing command documentation and stable requirement IDs for SpecSync 5.0.1 governance; runtime behavior is unchanged. |
+| 2026-07-13 | CHG-0001-adopt-specsync-5-0-1-and-trust-1-0-0-governance-for-the-weather-fledge-plugin: Adopt SpecSync 5.0.1 and Trust 1.0.0 governance for the weather Fledge plugin |

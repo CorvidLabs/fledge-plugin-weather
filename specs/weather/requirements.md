@@ -6,7 +6,11 @@ spec: weather.spec.md
 
 ### REQ-weather-001
 
-The plugin SHALL accept positional CLI locations and named `location`, `forecast`, and `units` tool arguments.
+The plugin SHALL accept positional CLI locations and named location, forecast, and units tool arguments.
+
+Acceptance Criteria
+- Offline help smoke verifies the positional location and forecast and units flags remain exposed.
+- Deterministic manifest validation confirms the Weather command retains the location, forecast, and units tool arguments without making live service calls.
 
 ### REQ-weather-002
 

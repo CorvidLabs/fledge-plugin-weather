@@ -27,6 +27,13 @@
       "timestamp": 1783955321,
       "digest": "c4e55c099b56ade13a33a1a966ccce41d6418ea69436a975a2f42f872789d8b8",
       "note": "Fresh definition approval after canonical structured requirements were aligned to the verified stable IDs."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "user:0xLeif",
+      "timestamp": 1783955376,
+      "digest": "f826a0014acf6cb75c2c1f7377023632c0eeb03113a79adcf714be9b6eed5f73",
+      "note": "Closing approval recorded after successful native verification and strict validation of canonical structured requirements."
     }
   ]
 }

@@ -5,10 +5,10 @@
   "title": "Adopt SpecSync 5.0.1 and Trust 1.0.0 governance for the weather Fledge plugin",
   "description": "Adopt SpecSync 5.0.1 and Trust 1.0.0 governance for the weather Fledge plugin",
   "kind": "migration",
-  "state": "implementing",
+  "state": "accepted",
   "base_commit": "4c2061a36f61e00565410abfa9927a185d88cfd7",
   "created_at": 1783883642,
-  "updated_at": 1783955321,
+  "updated_at": 1783955376,
   "affected_specs": [
     "weather"
   ],
