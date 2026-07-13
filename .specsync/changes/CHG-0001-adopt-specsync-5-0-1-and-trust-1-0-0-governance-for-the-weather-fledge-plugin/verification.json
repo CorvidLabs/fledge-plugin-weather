@@ -1,0 +1,17 @@
+{
+  "timestamp": 1783954689,
+  "commit": "66ddb6522779747cb8c8b23944136ec39274c3bf",
+  "contract_digest": "b2cdb47f6fca586f9fdc25ed00cdecba8ca59b23ef1430be74ecb0b8842aafdd",
+  "workspace_digest": "d5256f91c5fe31aec307b6587d3ab35b32d5c400f490ecb37e1ed8bca9cdc61a",
+  "passed": false,
+  "commands": [
+    {
+      "command": "fledge lanes run verify",
+      "success": true,
+      "exit_code": 0
+    }
+  ],
+  "requirement_ids": [
+    "REQ-weather-001"
+  ]
+}

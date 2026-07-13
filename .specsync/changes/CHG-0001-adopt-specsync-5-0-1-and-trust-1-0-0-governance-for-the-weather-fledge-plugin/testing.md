@@ -13,4 +13,6 @@ artifact: testing
 - Plugin manifest binary-path validation
 - `fledge trust doctor`
 
+The offline help and manifest-argument checks provide command evidence for REQ-weather-001.
+
 Live geocoding, forecast, and IP auto-detection checks remain independently authorized and are not required for this deterministic migration gate.
