@@ -1,6 +1,6 @@
 ---
 id: CHG-0001-adopt-specsync-5-0-1-and-trust-1-0-0-governance-for-the-weather-fledge-plugin
-state: verifying
+state: implementing
 type: migration
 base_commit: 4c2061a36f61e00565410abfa9927a185d88cfd7
 ---
