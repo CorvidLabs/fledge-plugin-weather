@@ -6,3 +6,8 @@ language = "shell"
 test = "bash bin/fledge-weather --help && bash bin/fledge-weather --version"
 lint = "shellcheck bin/fledge-weather"
 check = "bash -n bin/fledge-weather"
+manifest = "grep -q 'binary = \"bin/fledge-weather\"' plugin.toml && grep -q 'name = \"location\"' plugin.toml && grep -q 'name = \"forecast\"' plugin.toml && grep -q 'name = \"units\"' plugin.toml"
+
+[lanes.verify]
+description = "Syntax-check, lint, and smoke-test the weather plugin without live API calls"
+steps = ["check", "lint", "test", "manifest"]
